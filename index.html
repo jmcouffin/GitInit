@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Sync Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+
+
+        .btn-folder {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #666;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-folder:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-folder.has-path {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .btn-folder:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .output {
+            margin-top: 30px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 10px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .output.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .warning {
+            color: #ffa500;
+        }
+
+        .error {
+            color: #ff4444;
+        }
+
+        .success {
+            color: #00ff00;
+        }
+
+        .info {
+            color: #00bfff;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .modal button {
+            flex: none;
+            padding: 12px 24px;
+        }
+
+        .path-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 Git Sync Tool</h1>
+            <p>Synchronisation Git simplifiée</p>
+        </div>
+
+        <form id="syncForm">
+            <div class="form-group">
+                <label for="remotePath">📁 Chemin du dossier serveur (Dossier Vide) (dépôt distant)</label>
+                <button type="button" class="btn-folder" id="remotePathBtn" onclick="selectRemoteFolder()">
+                    📁 Parcourir - Ex: /path/to/remote/repo Le dossier doit être vide
+                </button>
+                <input type="hidden" id="remotePath" required>
+            </div>
+
+            <div class="form-group">
+                <label for="localPath">💻 Chemin local (votre ordinateur, contient tes fichiers de ton
+                    application)</label>
+                <button type="button" class="btn-folder" id="localPathBtn" onclick="selectLocalFolder()">
+                    📁 Parcourir - Ex: /path/to/local/repo Ce dossier contient ton projet sur ton ordinateur
+                </button>
+                <input type="hidden" id="localPath" required>
+            </div>
+
+            <div class="form-group">
+                <label for="direction">🔄 Direction de synchronisation</label>
+                <select id="direction">
+                    <option value="auto">Auto (détection intelligente)</option>
+                    <option value="push">Push → Envoyer vers serveur</option>
+                    <option value="pull">Pull ← Récupérer du serveur</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-primary">
+                    🚀 Lancer la synchronisation
+                </button>
+                <button type="button" class="btn-secondary" onclick="clearOutput()">
+                    🗑️ Effacer
+                </button>
+            </div>
+        </form>
+
+        <div class="output" id="output"></div>
+    </div>
+
+    <!-- Modal pour les conflits -->
+    <div class="modal" id="conflictModal">
+        <div class="modal-content">
+            <h3>⚠️ Conflit détecté</h3>
+            <p>Le serveur et le local ont du contenu différent!</p>
+            <div class="path-display">
+                <strong>Remote:</strong> Dossier vide sur le serveur qui contiendra le code source<br>
+                <strong>Local:</strong> Dossier sur votre ordinateur contenant le code de l'application
+            </div>
+            <p>Que voulez-vous faire ?</p>
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="resolveConflict('push')">
+                    📤 Envoyer local → serveur
+                </button>
+                <button class="btn-secondary" onclick="resolveConflict('pull')">
+                    📥 Récupérer serveur → local
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { exec } = require('child_process');
+        const fs = require('fs');
+        const path = require('path');
+
+        class GitSyncTool {
+            constructor() {
+                this.output = document.getElementById('output');
+                this.form = document.getElementById('syncForm');
+                this.modal = document.getElementById('conflictModal');
+                this.currentOperation = null;
+
+                this.form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.sync();
+                });
+            }
+
+            log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const colors = {
+                    info: 'info',
+                    warning: 'warning',
+                    error: 'error',
+                    success: 'success'
+                };
+
+                const line = document.createElement('div');
+                line.className = colors[type] || 'info';
+                line.innerHTML = `[${timestamp}] ${message}`;
+
+                this.output.appendChild(line);
+                this.output.classList.add('show');
+                this.output.scrollTop = this.output.scrollHeight;
+            }
+
+            async sync() {
+                const remotePath = document.getElementById('remotePath').value.trim();
+                const localPath = document.getElementById('localPath').value.trim();
+                const direction = document.getElementById('direction').value;
+
+                if (!remotePath || !localPath) {
+                    this.log('❌ Veuillez remplir tous les champs requis', 'error');
+                    return;
+                }
+
+                this.log(`🏠 Local (votre ordinateur): ${localPath}`);
+                this.log(`🌐 Serveur (sauvegarde): ${remotePath}`);
+                this.log('');
+
+                await this.realSync(remotePath, localPath, direction);
+            }
+
+            async realSync(remotePath, localPath, direction) {
+                try {
+                    // Créer les dossiers si nécessaire
+                    await this.ensureDirectories(remotePath, localPath);
+
+                    // Initialiser les dépôts
+                    await this.initRepositories(remotePath, localPath);
+
+                    // Sauvegarder les modifications locales
+                    await this.commitLocalChanges(localPath);
+
+                    // Synchroniser selon la direction
+                    switch (direction) {
+                        case 'push':
+                            await this.pushToRemote(localPath);
+                            break;
+                        case 'pull':
+                            await this.pullFromRemote(localPath);
+                            break;
+                        case 'auto':
+                            await this.autoSync(localPath, remotePath);
+                            break;
+                    }
+
+                    this.log('');
+                    this.log('✅ Terminé!', 'success');
+                } catch (error) {
+                    this.log(`❌ Erreur: ${error.message}`, 'error');
+                }
+            }
+
+            async ensureDirectories(remotePath, localPath) {
+                this.log('📁 Vérification des répertoires...', 'info');
+
+                if (!fs.existsSync(remotePath)) {
+                    fs.mkdirSync(remotePath, { recursive: true });
+                    this.log(`✅ Dossier distant créé: ${remotePath}`);
+                }
+
+                if (!fs.existsSync(localPath)) {
+                    fs.mkdirSync(localPath, { recursive: true });
+                    this.log(`✅ Dossier local créé: ${localPath}`);
+                }
+            }
+
+            async initRepositories(remotePath, localPath) {
+                // Initialiser le dépôt distant
+                if (!fs.existsSync(path.join(remotePath, '.git'))) {
+                    this.log('🔧 Initialisation du dépôt serveur...', 'warning');
+                    await this.execCommand(`git init`, remotePath);
+                    await this.execCommand(`git config receive.denyCurrentBranch updateInstead`, remotePath);
+                    this.log('✅ Dépôt serveur initialisé');
+                }
+
+                // Initialiser le dépôt local
+                if (!fs.existsSync(path.join(localPath, '.git'))) {
+                    this.log('🔧 Initialisation du dépôt local...', 'warning');
+                    await this.execCommand(`git init`, localPath);
+                    await this.execCommand(`git remote add origin "${remotePath}"`, localPath);
+                    this.log('✅ Dépôt local initialisé et remote ajouté');
+                }
+            }
+
+            async commitLocalChanges(localPath) {
+                try {
+                    const status = await this.execCommand('git status --porcelain', localPath);
+                    if (status.trim()) {
+                        this.log('💾 Sauvegarde des modifications locales...', 'warning');
+                        await this.execCommand('git add .', localPath);
+                        const commitMsg = `Synchronisation: ${new Date().toLocaleString()}`;
+                        await this.execCommand(`git commit -m "${commitMsg}"`, localPath);
+                        this.log('✅ Modifications sauvegardées');
+                    }
+                } catch (error) {
+                    // Pas de modifications ou pas de fichiers
+                }
+            }
+
+            async pushToRemote(localPath) {
+                this.log('📤 Envoi vers le serveur...', 'warning');
+                try {
+                    await this.execCommand('git push origin master', localPath);
+                } catch (error) {
+                    // Premier push
+                    await this.execCommand('git push -u origin master', localPath);
+                }
+                this.log('✅ Envoyé vers le serveur', 'success');
+            }
+
+            async pullFromRemote(localPath) {
+                this.log('📥 Récupération depuis le serveur...', 'warning');
+                await this.execCommand('git fetch origin', localPath);
+                await this.execCommand('git merge origin/master', localPath);
+                this.log('✅ Récupéré depuis le serveur', 'success');
+            }
+
+            async autoSync(localPath, remotePath) {
+                this.log('🤖 Mode automatique activé...', 'info');
+
+                try {
+                    // Vérifier s'il y a des commits locaux
+                    const hasLocalCommits = await this.execCommand('git rev-parse HEAD', localPath);
+
+                    if (!hasLocalCommits.trim()) {
+                        this.log('ℹ️ Aucun commit à synchroniser', 'warning');
+                        return;
+                    }
+
+                    // Récupérer les infos du remote
+                    await this.execCommand('git fetch origin', localPath);
+
+                    // Vérifier les branches distantes
+                    const remoteBranches = await this.execCommand('git branch -r', localPath);
+
+                    if (!remoteBranches.trim()) {
+                        // Remote vide, push local
+                        this.log('📤 Envoi vers le serveur...', 'warning');
+                        await this.execCommand('git push -u origin master', localPath);
+                        this.log('✅ Code envoyé vers le serveur', 'success');
+                    } else {
+                        // Comparer les versions
+                        const localCommit = await this.execCommand('git rev-parse HEAD', localPath);
+                        const remoteCommit = await this.execCommand('git rev-parse origin/master', localPath);
+
+                        if (localCommit.trim() === remoteCommit.trim()) {
+                            this.log('✅ Déjà synchronisé', 'success');
+                        } else {
+                            // Conflit - demander à l'utilisateur
+                            this.showConflictModal();
+                        }
+                    }
+                } catch (error) {
+                    // Premier sync
+                    await this.pushToRemote(localPath);
+                }
+            }
+
+            async execCommand(command, workingDir) {
+                return new Promise((resolve, reject) => {
+                    exec(command, { cwd: workingDir }, (error, stdout, stderr) => {
+                        if (error) {
+                            reject(new Error(stderr || error.message));
+                        } else {
+                            resolve(stdout);
+                        }
+                    });
+                });
+            }
+
+            showConflictModal() {
+                this.log('⚠️ Le serveur et le local ont du contenu différent!', 'warning');
+                this.modal.classList.add('show');
+            }
+
+            async resolveConflict(action) {
+                this.modal.classList.remove('show');
+                const localPath = document.getElementById('localPath').value.trim();
+
+                if (action === 'push') {
+                    this.log('📤 Force push vers le serveur...', 'warning');
+                    await this.execCommand('git push origin master --force', localPath);
+                    this.log('✅ Code local envoyé vers le serveur', 'success');
+                } else {
+                    this.log('📥 Reset vers la version serveur...', 'warning');
+                    await this.execCommand('git reset --hard origin/master', localPath);
+                    this.log('✅ Code serveur récupéré en local', 'success');
+                }
+
+                this.log('');
+                this.log('✅ Terminé!', 'success');
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        function clearOutput() {
+            const output = document.getElementById('output');
+            output.innerHTML = '';
+            output.classList.remove('show');
+        }
+
+        function resolveConflict(action) {
+            window.gitSync.resolveConflict(action);
+        }
+
+        // Folder selection functions
+        async function selectRemoteFolder() {
+            const { ipcRenderer } = require('electron');
+            const selectedPath = await ipcRenderer.invoke('select-folder', 'Sélectionner le dossier serveur (distant)');
+            if (selectedPath) {
+                document.getElementById('remotePath').value = selectedPath;
+                const btn = document.getElementById('remotePathBtn');
+                btn.textContent = selectedPath;
+                btn.classList.add('has-path');
+            }
+        }
+
+        async function selectLocalFolder() {
+            const { ipcRenderer } = require('electron');
+            const selectedPath = await ipcRenderer.invoke('select-folder', 'Sélectionner le dossier local');
+            if (selectedPath) {
+                document.getElementById('localPath').value = selectedPath;
+                const btn = document.getElementById('localPathBtn');
+                btn.textContent = selectedPath;
+                btn.classList.add('has-path');
+            }
+        }
+
+        // Initialisation
+        window.gitSync = new GitSyncTool();
+
+        // Animation au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('.container').style.opacity = '0';
+            document.querySelector('.container').style.transform = 'translateY(20px)';
+
+            setTimeout(() => {
+                document.querySelector('.container').style.transition = 'all 0.6s ease';
+                document.querySelector('.container').style.opacity = '1';
+                document.querySelector('.container').style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body>
+
+</html>

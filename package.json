@@ -1,0 +1,56 @@
+
+{
+  "name": "git-sync-tool",
+  "version": "1.0.0",
+  "description": "Outil de synchronisation Git avec interface graphique",
+  "author": "Votre Nom",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "build-mac": "electron-builder --mac",
+    "build-linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "28.3.3",
+    "electron-builder": "24.13.3"
+  },
+  "dependencies": {
+    "simple-git": "^3.19.1"
+  },
+  "build": {
+    "appId": "com.yourcompany.git-sync-tool",
+    "productName": "Git Sync Tool",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.exe"
+    },
+    "extraMetadata": {
+      "main": "main.js"
+    },
+    "afterSign": false,
+    "forceCodeSigning": false,
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
